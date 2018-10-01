@@ -1,0 +1,6 @@
+mvn clean
+mvn install
+mvn jacoco:prepare-agent
+java -javaagent:/Users/timm/.m2/repository/org/jacoco/org.jacoco.agent/0.8.1/org.jacoco.agent-0.8.1-runtime.jar=destfile=/Users/timm/UofT/CSC410/a1/jpacman-framework/target/jacoco.exec -jar target/jpacman-framework-8.1.0.jar
+mvn jacoco:report
+open target/site/jacoco/index.html

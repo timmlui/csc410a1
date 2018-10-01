@@ -1,0 +1,30 @@
+{
+    "run": {
+        "default": "",
+        "items": [
+            {
+                "name": "jpacman-framework",
+                "projectName": "jpacman-framework",
+                "workingDirectory": "/Users/timm/UofT/CSC410/a1/jpacman-framework",
+                "args": [],
+                "vmargs": [],
+                "env": {},
+                "preLaunchTask": ""
+            }
+        ]
+    },
+    "debug": {
+        "default": "",
+        "items": [
+            {
+                "name": "jpacman-framework",
+                "projectName": "jpacman-framework",
+                "workingDirectory": "/Users/timm/UofT/CSC410/a1/jpacman-framework",
+                "args": [],
+                "vmargs": [],
+                "env": {},
+                "preLaunchTask": ""
+            }
+        ]
+    }
+}
