@@ -13,8 +13,11 @@ import java.util.Random;
 
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.BoardFactory;
+import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.game.Game;
+import nl.tudelft.jpacman.game.GameFactory;
 import nl.tudelft.jpacman.npc.Ghost;
 import nl.tudelft.jpacman.npc.ghost.Blinky;
 import nl.tudelft.jpacman.npc.ghost.GhostFactory;
@@ -37,6 +40,11 @@ class FreezeTest {
      * The level under test.
      */
     private Level level;
+
+    /**
+     * The game under test.
+     */
+    private Game game;
 
     /**
      * An NPC on this level.
@@ -62,13 +70,15 @@ class FreezeTest {
     private final DefaultPlayerInteractionMap defaultPlayerInteractions = new DefaultPlayerInteractionMap();
 
     private final Square[][] grid = {
-        { mock(Square.class), mock(Square.class) },
-        { mock(Square.class), mock(Square.class) }
+        { square1, square2 },
+        { square3, square4 }
     };
 
     PacManSprites spriteStore = new PacManSprites();
     BoardFactory boardFactory = new BoardFactory(spriteStore);
     Board board = boardFactory.createBoard(grid);
+    PlayerFactory playerFactory = new PlayerFactory(spriteStore);
+    GameFactory gameFactory = new GameFactory(playerFactory);
 
 
     /**
@@ -81,6 +91,7 @@ class FreezeTest {
         level = new Level(board, Lists.newArrayList(ghost), Lists.newArrayList(
             square1, square2, square3, square4), collisions);
         when(ghost.getInterval()).thenReturn(defaultInterval);
+        game = gameFactory.createSinglePlayerGame(level);
     }
 
     /**
@@ -89,7 +100,8 @@ class FreezeTest {
     @Test
     void inProgress() {
         //System.out.println("HEIGHT: " + board.getHeight() + " AND WIDTH: " + board.getWidth());
-        level.freeze();
+        game.start();
+        game.freeze();
         assertThat(level.isInProgress()).isTrue();
     }
 
@@ -98,7 +110,15 @@ class FreezeTest {
      */
     @Test
     void playerMovement() {
-        
+        System.out.println("BOARD: " + board.getHeight() + "x" + board.getWidth());
+        game.start();
+        game.freeze();
+        Player player = new PlayerFactory(spriteStore).createPacMan();
+        level.registerPlayer(player);
+        player.occupy(square1);
+        System.out.println("===DOES SQ1 HV PLAYER?: " + square1.getOccupants().contains(player));
+        game.move(player, Direction.SOUTH);
+        assertThat(square3.getOccupants().contains(player));
     }
 
     /**
