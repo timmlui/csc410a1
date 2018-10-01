@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Random;
 
 import nl.tudelft.jpacman.board.Board;
+import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.npc.Ghost;
@@ -43,19 +44,12 @@ class FreezeTest {
     private final Ghost ghost = mock(Ghost.class);
 
     /**
-     * Starting position 1.
+     * Creating 4 squares
      */
     private final Square square1 = mock(Square.class);
-
-    /**
-     * Starting position 2.
-     */
     private final Square square2 = mock(Square.class);
-
-    /**
-     * The board for this level.
-     */
-    private final Board board = mock(Board.class);
+    private final Square square3 = mock(Square.class);
+    private final Square square4 = mock(Square.class);
 
     /**
      * The collision map.
@@ -67,6 +61,15 @@ class FreezeTest {
      */
     private final DefaultPlayerInteractionMap defaultPlayerInteractions = new DefaultPlayerInteractionMap();
 
+    private final Square[][] grid = {
+        { mock(Square.class), mock(Square.class) },
+        { mock(Square.class), mock(Square.class) }
+    };
+
+    PacManSprites spriteStore = new PacManSprites();
+    BoardFactory boardFactory = new BoardFactory(spriteStore);
+    Board board = boardFactory.createBoard(grid);
+
 
     /**
      * Sets up the level with the default board, a single NPC and a starting
@@ -76,7 +79,7 @@ class FreezeTest {
     void setUp() {
         final long defaultInterval = 100L;
         level = new Level(board, Lists.newArrayList(ghost), Lists.newArrayList(
-            square1, square2), collisions);
+            square1, square2, square3, square4), collisions);
         when(ghost.getInterval()).thenReturn(defaultInterval);
     }
 
@@ -84,8 +87,10 @@ class FreezeTest {
      * Validates that the state of the game is still in progress.
      */
     @Test
-    void inPrgoress() {
-        assertThat(level.isInProgress()).isFalse();
+    void inProgress() {
+        //System.out.println("HEIGHT: " + board.getHeight() + " AND WIDTH: " + board.getWidth());
+        level.freeze();
+        assertThat(level.isInProgress()).isTrue();
     }
 
     /**
@@ -93,7 +98,7 @@ class FreezeTest {
      */
     @Test
     void playerMovement() {
-        assertThat(level.isInProgress()).isFalse();
+        
     }
 
     /**
@@ -101,8 +106,7 @@ class FreezeTest {
      */
     @Test
     void score() {
-        level.stop();
-        assertThat(level.isInProgress()).isFalse();
+        
     }
 
     /**
