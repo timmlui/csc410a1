@@ -61,23 +61,58 @@ class BoardTest {
         assertThat(board.squareAt(x, y)).isEqualTo(grid[x][y]);
     }
 
+     /**
+     * Verifies that illegal boards can be detected.
+     */
     @Test
     void testIllegalBoard() {
         assertThat(illegalBoard.invariant()).isFalse();
     }
 
+    /**
+     * Verifies that coordinates can be located as within 
+     * or outside the border.
+     */
     @Test
-    void testOnBoundary() {
-        assertThat(board.withinBorders(2, 1)).isTrue();
+    void testOnPointX() {
+        assertThat(board.withinBorders(0, 1)).isTrue();
+        assertThat(board.withinBorders(3, 1)).isFalse();
     }
 
+    /**
+     * Verifies that coordinates can be located as within 
+     * or outside the border.
+     */
     @Test
-    void testInBoundary() {
+    void testInPointXandY() {
         assertThat(board.withinBorders(1, 1)).isTrue();
     }
-
+    /**
+     * Verifies that coordinates can be located as within 
+     * or outside the border.
+     */
     @Test
-    void testOffBoundary() {
-        assertThat(board.withinBorders(5, 2)).isFalse();
+    void testOffPointX() {
+        assertThat(board.withinBorders(-1, 1)).isFalse();
+        assertThat(board.withinBorders(5, 1)).isFalse();
+    }
+
+    /**
+     * Verifies that coordinates can be located as within 
+     * or outside the border.
+     */
+    @Test
+    void testOnPointY() {
+        assertThat(board.withinBorders(1, 0)).isTrue();
+        assertThat(board.withinBorders(1, 3)).isFalse();
+    }
+    /**
+     * Verifies that coordinates can be located as within 
+     * or outside the border.
+     */
+    @Test
+    void testOffPointY() {
+        assertThat(board.withinBorders(1, -1)).isFalse();
+        assertThat(board.withinBorders(1, 5)).isFalse();
     }
 }
