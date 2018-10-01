@@ -170,22 +170,29 @@ class LevelTest {
         verify(p3).occupy(square1);
     }
 
+    /**
+     * Verifies that unit collision produces the correct outcome of the status of the game.
+     * Only Player-Ghost interactions should end and anything else should not affect it.
+     */
     @Test
     void testCollision() {
         PacManSprites spriteStore = new PacManSprites();
-        Player C1 = new PlayerFactory(spriteStore).createPacMan();
-        level.registerPlayer(C1);
+        Player player = new PlayerFactory(spriteStore).createPacMan();
+        level.registerPlayer(player);
         GhostFactory ghostFactory = new GhostFactory(spriteStore);
-        Ghost C2 = new LevelFactory(spriteStore, ghostFactory).createGhost();
-        Pellet C3 = new LevelFactory(spriteStore, ghostFactory).createPellet();
+        LevelFactory levelFactory = new LevelFactory(spriteStore, ghostFactory);
+        Ghost ghost = levelFactory.createGhost();
+        Pellet pellet = levelFactory.createPellet();
 
         List<Unit> unitList = new ArrayList<Unit>();
-        unitList.add(C1);
-        unitList.add(C2);
-        unitList.add(C3);
+        unitList.add(player);
+        unitList.add(ghost);
+        unitList.add(pellet);
         Random blackBoxRandom = new Random();
         Unit colider = unitList.get(blackBoxRandom.nextInt(unitList.size()));
-        unitList.remove(colider);
+        if (colider.getClass().equals(Pellet.class)) {
+            unitList.remove(colider);
+        }
         Unit colidee = unitList.get(blackBoxRandom.nextInt(unitList.size()));
 
         defaultPlayerInteractions.collide(colider, colidee);
