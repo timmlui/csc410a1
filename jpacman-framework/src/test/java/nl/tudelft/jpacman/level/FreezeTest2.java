@@ -12,19 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Smoke test launching the full game,
- * and attempting to make a number of typical moves.
+ * Tests various aspects of freeze.
  *
- * This is <strong>not</strong> a <em>unit</em> test -- it is an end-to-end test
- * trying to execute a large portion of the system's behavior directly from the
- * user interface. It uses the actual sprites and monster AI, and hence
- * has little control over what is happening in the game.
- *
- * Because it is an end-to-end test, it is somewhat longer
- * and has more assert statements than what would be good
- * for a small and focused <em>unit</em> test.
- *
- * @author Arie van Deursen, March 2014.
+ * @author Timothy Lui and Ivan Shen
  */
 public class FreezeTest2 {
 
@@ -69,7 +59,7 @@ public class FreezeTest2 {
         game.start();
         game.freeze();
         Square currentSquare = player.getSquare();
-        game.move(player, Direction.EAST);
+        move(game, Direction.EAST, 1);
         Square afterSquare = player.getSquare();
         assertThat(currentSquare.equals(afterSquare)).isFalse();
     }
@@ -79,7 +69,17 @@ public class FreezeTest2 {
      */
     @Test
     void score() {
-        
+        game.start();
+        game.freeze();
+        int currentPellets = game.getLevel().remainingPellets();
+        int currentPoints = player.getScore();
+        assertThat(player.getScore()).isZero();
+
+        move(game, Direction.EAST, 1);
+        int afterPellets = game.getLevel().remainingPellets();
+        int afterPoints = player.getScore();
+        assertThat(afterPellets == currentPellets).isFalse();
+        assertThat(afterPoints == currentPoints).isFalse();
     }
 
     /**
@@ -95,6 +95,84 @@ public class FreezeTest2 {
      */
     @Test
     void gameEnd() {
+        game.start();
+        game.freeze();
+        // head towards npc
+        move(game, Direction.EAST, 1);
+        move(game, Direction.NORTH, 2);
+        move(game, Direction.EAST, 3);
+        move(game, Direction.NORTH, 6);
+        move(game, Direction.WEST, 4);
+        // should have collided with ghost (Inky is at starting position)
+        assertThat(player.isAlive()).isFalse();
+        assertThat(game.getLevel().isAnyPlayerAlive()).isFalse();
+        assertThat(game.isInProgress()).isFalse();
+    }
 
+    /**
+     * Validates the state of the game is unfrozen (npc can move) after a freeze -> start sequence.
+     */
+    @Test
+    void freezeStart() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+    }
+
+    /**
+     * Validates the state of the game is unfrozen (npc can move) after unfreezing (clicking freeze again).
+     */
+    @Test
+    void freezeUnfreeze() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+    }
+
+    /**
+     * Validates the state of the game is stopped after a freeze -> stop sequence.
+     */
+    @Test
+    void freezeStop() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        game.stop();
+        assertThat(game.isInProgress()).isFalse();
+    }
+
+    /**
+     * Validates the state of the game is still stopped after a stop -> freeze sequence.
+     */
+    @Test
+    void stopFreeze() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.stop();
+        assertThat(game.isInProgress()).isFalse();
+        game.freeze();
+        assertThat(game.isInProgress()).isFalse();
+
+    }
+
+    /**
+     * Make number of moves in given direction.
+     *
+     * @param game The game we're playing
+     * @param dir The direction to be taken
+     * @param numSteps The number of steps to take
+     */
+    public static void move(Game game, Direction dir, int numSteps) {
+        Player player = game.getPlayers().get(0);
+        for (int i = 0; i < numSteps; i++) {
+            game.move(player, dir);
+        }
     }
 }
