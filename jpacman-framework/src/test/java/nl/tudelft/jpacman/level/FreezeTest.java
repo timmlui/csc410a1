@@ -1,150 +1,226 @@
-// package nl.tudelft.jpacman.level;
+package nl.tudelft.jpacman.level;
 
-// import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-// import static org.mockito.Mockito.mock;
-// import static org.mockito.Mockito.times;
-// import static org.mockito.Mockito.verify;
-// import static org.mockito.Mockito.when;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-// import java.util.ArrayList;
-// import java.util.List;
-// import java.util.Random;
+import nl.tudelft.jpacman.Launcher;
+import nl.tudelft.jpacman.board.Board;
+import nl.tudelft.jpacman.board.Direction;
+import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.game.Game;
+import nl.tudelft.jpacman.level.Player;
+import nl.tudelft.jpacman.npc.Ghost;
+import nl.tudelft.jpacman.npc.ghost.Navigation;
 
-// import nl.tudelft.jpacman.board.Board;
-// import nl.tudelft.jpacman.board.BoardFactory;
-// import nl.tudelft.jpacman.board.Direction;
-// import nl.tudelft.jpacman.board.Square;
-// import nl.tudelft.jpacman.board.Unit;
-// import nl.tudelft.jpacman.game.Game;
-// import nl.tudelft.jpacman.game.GameFactory;
-// import nl.tudelft.jpacman.npc.Ghost;
-// import nl.tudelft.jpacman.npc.ghost.Blinky;
-// import nl.tudelft.jpacman.npc.ghost.GhostFactory;
-// import nl.tudelft.jpacman.sprite.PacManSprites;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import com.google.common.collect.Lists;
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Test;
+/**
+ * Tests various aspects of freeze.
+ *
+ * @author Timothy Lui and Ivan Shen
+ */
+public class FreezeTest {
 
-// /**
-//  * Tests various aspects of freeze.
-//  *
-//  * @author Timothy Lui and Ivan Shen
-//  */
-// // The four suppress warnings ignore the same rule, which results in 4 same string literals
-// @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.TooManyStaticImports"})
-// class FreezeTest {
+    private Launcher launcher;
+    private Game game;
+    private Player player;
 
-//     /**
-//      * The level under test.
-//      */
-//     private Level level;
+    /**
+     * Launch the user interface.
+     */
+    @BeforeEach
+    void setUpPacman() {
+        launcher = new Launcher();
+        launcher.launch();
+        game = launcher.getGame();
+        player = game.getPlayers().get(0);
+    }
 
-//     /**
-//      * The game under test.
-//      */
-//     private Game game;
+    /**
+     * Quit the user interface when we're done.
+     */
+    @AfterEach
+    void tearDown() {
+        launcher.dispose();
+    }
 
-//     /**
-//      * An NPC on this level.
-//      */
-//     private final Ghost ghost = mock(Ghost.class);
+    /**
+     * Validates that the state of the game is still in progress.
+     */
+    @Test
+    void inProgress() {
+        game.start();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+    }
 
-//     /**
-//      * Creating 4 squares
-//      */
-//     private final Square square1 = mock(Square.class);
-//     private final Square square2 = mock(Square.class);
-//     private final Square square3 = mock(Square.class);
-//     private final Square square4 = mock(Square.class);
+    /**
+     * Validates that the player can still move.
+     */
+    @Test
+    void playerMovement() {
+        game.start();
+        game.freeze();
+        Square currentSquare = player.getSquare();
+        move(game, Direction.EAST, 3);
+        Square afterSquare = player.getSquare();
+        assertThat(currentSquare.equals(afterSquare)).isFalse();
+    }
 
-//     /**
-//      * The collision map.
-//      */
-//     private final CollisionMap collisions = mock(CollisionMap.class);
+    /**
+     * Validates that the score still updates.
+     */
+    @Test
+    void score() {
+        game.start();
+        game.freeze();
+        int currentPellets = game.getLevel().remainingPellets();
+        int currentPoints = player.getScore();
+        assertThat(player.getScore()).isZero();
 
-//     /**
-//      * The default player interaction map.
-//      */
-//     private final DefaultPlayerInteractionMap defaultPlayerInteractions = new DefaultPlayerInteractionMap();
+        move(game, Direction.EAST, 1);
+        int afterPellets = game.getLevel().remainingPellets();
+        int afterPoints = player.getScore();
+        assertThat(afterPellets == currentPellets).isFalse();
+        assertThat(afterPoints == currentPoints).isFalse();
+    }
 
-//     private final Square[][] grid = {
-//         { square1, square2 },
-//         { square3, square4 }
-//     };
+    /**
+     * Validates that the NPCs cannot move.
+     */
+    @Test
+    void npcNoMovement() throws InterruptedException {
+        game.start();
+        List<Ghost> ghostList = findGhostsInBoard(game.getLevel().getBoard());
+        Map<Ghost, Square> occupiedMapBefore = new HashMap<Ghost, Square>();
+        Map<Ghost, Square> occupiedMapAfter = new HashMap<Ghost, Square>();
 
-//     PacManSprites spriteStore = new PacManSprites();
-//     BoardFactory boardFactory = new BoardFactory(spriteStore);
-//     Board board = boardFactory.createBoard(grid);
-//     PlayerFactory playerFactory = new PlayerFactory(spriteStore);
-//     GameFactory gameFactory = new GameFactory(playerFactory);
+        for (Ghost g : ghostList) {
+            occupiedMapBefore.put(g, g.getSquare());
+        }
+        game.freeze();
 
+        // Sleeping in tests is generally a bad idea.
+        // Here we do it just to let the monsters try and move.
+        // (Shouldn't actually move as it is in freeze mode)
+        Thread.sleep(500L);
 
-//     /**
-//      * Sets up the level with the default board, a single NPC and a starting
-//      * square.
-//      */
-//     @BeforeEach
-//     void setUp() {
-//         final long defaultInterval = 100L;
-//         level = new Level(board, Lists.newArrayList(ghost), Lists.newArrayList(
-//             square1, square2, square3, square4), collisions);
-//         when(ghost.getInterval()).thenReturn(defaultInterval);
-//         game = gameFactory.createSinglePlayerGame(level);
-//     }
+        for (Ghost g : ghostList) {
+            occupiedMapAfter.put(g, g.getSquare());
+        }
+        assertThat(occupiedMapBefore.equals(occupiedMapAfter)).isTrue();
+    }
 
-//     /**
-//      * Validates that the state of the game is still in progress.
-//      */
-//     @Test
-//     void inProgress() {
-//         //System.out.println("HEIGHT: " + board.getHeight() + " AND WIDTH: " + board.getWidth());
-//         game.start();
-//         game.freeze();
-//         assertThat(level.isInProgress()).isTrue();
-//     }
+    /**
+     * Validates the state of the game can still end if the player and ghost collides.
+     */
+    @Test
+    void gameEnd() {
+        game.start();
+        game.freeze();
+        // head towards npc
+        move(game, Direction.EAST, 1);
+        move(game, Direction.NORTH, 2);
+        move(game, Direction.EAST, 3);
+        move(game, Direction.NORTH, 6);
+        move(game, Direction.WEST, 4);
+        // should have collided with ghost (Inky is at starting position)
+        assertThat(player.isAlive()).isFalse();
+        assertThat(game.getLevel().isAnyPlayerAlive()).isFalse();
+        assertThat(game.isInProgress()).isFalse();
+    }
 
-//     /**
-//      * Validates that the player can still move.
-//      */
-//     @Test
-//     void playerMovement() {
-//         System.out.println("BOARD: " + board.getHeight() + "x" + board.getWidth());
-//         game.start();
-//         game.freeze();
-//         Player player = new PlayerFactory(spriteStore).createPacMan();
-//         level.registerPlayer(player);
-//         player.occupy(square1);
-//         System.out.println("===DOES SQ1 HV PLAYER?: " + square1.getOccupants().contains(player));
-//         game.move(player, Direction.SOUTH);
-//         assertThat(square3.getOccupants().contains(player));
-//     }
+    /**
+     * Validates the state of the game is unfrozen (npc can move) after a freeze -> start sequence.
+     */
+    @Test
+    void freezeStart() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+    }
 
-//     /**
-//      * Validates that the score still updates.
-//      */
-//     @Test
-//     void score() {
-        
-//     }
+    /**
+     * Validates the state of the game is unfrozen (npc can move) after unfreezing (clicking freeze again).
+     */
+    @Test
+    void freezeUnfreeze() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+    }
 
-//     /**
-//      * Validates that the NPCs cannot move.
-//      */
-//     @Test
-//     void npcNoMovement() {
-//         level.start();
-//         assertThat(level.isInProgress()).isTrue();
-//     }
+    /**
+     * Validates the state of the game is stopped after a freeze -> stop sequence.
+     */
+    @Test
+    void freezeStop() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        game.stop();
+        assertThat(game.isInProgress()).isFalse();
+    }
 
-//     /**
-//      * Validates the state of the game can still end if the player and ghost collides.
-//      */
-//     @Test
-//     void gameEnd() {
-//         level.start();
-//         level.stop();
-//         assertThat(level.isInProgress()).isFalse();
-//     }
-// }
+    /**
+     * Validates the state of the game is still stopped after a stop -> freeze sequence.
+     */
+    @Test
+    void stopFreeze() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.stop();
+        assertThat(game.isInProgress()).isFalse();
+        game.freeze();
+        assertThat(game.isInProgress()).isFalse();
+    }
+
+    /**
+     * Make number of moves in given direction.
+     * Borrowed from LauncherSmokeTest.java.
+     *
+     * @param game The game we're playing
+     * @param dir The direction to be taken
+     * @param numSteps The number of steps to take
+     */
+    public static void move(Game game, Direction dir, int numSteps) {
+        Player player = game.getPlayers().get(0);
+        for (int i = 0; i < numSteps; i++) {
+            game.move(player, dir);
+        }
+    }
+
+    /**
+     * Finds all the ghosts in a level.
+     * Borrowed from Navigation.java findUnitInBoard method.
+     * 
+     * @param board
+     * @return ghostList
+     */
+    public static List<Ghost> findGhostsInBoard(Board board) {
+        List<Ghost> ghostList = new ArrayList<Ghost>();
+        for (int y = 0; y < board.getHeight(); y++) {
+            for (int x = 0; x < board.getWidth(); x++) {
+                final Ghost ghost = Navigation.findUnit(Ghost.class, board.squareAt(x, y));
+                if (ghost != null) {
+                    ghostList.add(ghost);
+                }
+            }
+        }
+
+        return ghostList;
+    }
+}
