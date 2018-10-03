@@ -11,6 +11,7 @@ import nl.tudelft.jpacman.Launcher;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.game.Game;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.npc.Ghost;
@@ -68,8 +69,19 @@ public class FreezeTest {
         game.start();
         game.freeze();
         Square currentSquare = player.getSquare();
-        move(game, Direction.EAST, 3);
+        move(game, Direction.EAST, 2);
         Square afterSquare = player.getSquare();
+        currentSquare = player.getSquare();
+        move(game, Direction.WEST, 1);
+        afterSquare = player.getSquare();
+        assertThat(currentSquare.equals(afterSquare)).isFalse();
+        currentSquare = player.getSquare();
+        move(game, Direction.NORTH, 1);
+        afterSquare = player.getSquare();
+        assertThat(currentSquare.equals(afterSquare)).isFalse();
+        currentSquare = player.getSquare();
+        move(game, Direction.SOUTH, 1);
+        afterSquare = player.getSquare();
         assertThat(currentSquare.equals(afterSquare)).isFalse();
     }
 
@@ -124,12 +136,11 @@ public class FreezeTest {
     void gameEnd() {
         game.start();
         game.freeze();
-        // head towards npc
-        move(game, Direction.EAST, 1);
-        move(game, Direction.NORTH, 2);
-        move(game, Direction.EAST, 3);
-        move(game, Direction.NORTH, 6);
-        move(game, Direction.WEST, 4);
+        List<Ghost> ghostList = findGhostsInBoard(game.getLevel().getBoard());
+        assert(ghostList.size() > 0);
+        DefaultPlayerInteractionMap defaultPlayerInteractions = new DefaultPlayerInteractionMap();
+        defaultPlayerInteractions.collide(ghostList.get(0), player);
+        game.getLevel().move(player, Direction.EAST); // move pacman once to update observer
         // should have collided with ghost (Inky is at starting position)
         assertThat(player.isAlive()).isFalse();
         assertThat(game.getLevel().isAnyPlayerAlive()).isFalse();
@@ -188,6 +199,17 @@ public class FreezeTest {
         assertThat(game.isInProgress()).isFalse();
     }
 
+    @Test
+    void testWin() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        removePellets();
+        move(game, Direction.EAST, 1); // move once to trigger win detection
+        assertThat(game.isInProgress()).isFalse();
+    }
+
     /**
      * Make number of moves in given direction.
      * Borrowed from LauncherSmokeTest.java.
@@ -200,6 +222,21 @@ public class FreezeTest {
         Player player = game.getPlayers().get(0);
         for (int i = 0; i < numSteps; i++) {
             game.move(player, dir);
+        }
+    }
+    /**
+     * Remove all the pellets from the board.
+     */
+    public void removePellets() {
+        Board board = game.getLevel().getBoard();
+        for (int x = 0; x < board.getWidth(); x++) {
+            for (int y = 0; y < board.getHeight(); y++) {
+                for (Unit unit : board.squareAt(x, y).getOccupants()) {
+                    if (unit instanceof Pellet) {
+                        unit.leaveSquare();
+                    }
+                }
+            }
         }
     }
 
