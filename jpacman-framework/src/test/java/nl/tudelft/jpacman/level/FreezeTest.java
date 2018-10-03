@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import nl.tudelft.jpacman.Launcher;
 import nl.tudelft.jpacman.board.Board;
@@ -65,11 +66,27 @@ public class FreezeTest {
      */
     @Test
     void playerMovement() {
+        List<Direction> directions = new ArrayList<Direction>();
+        directions.add(Direction.NORTH);
+        directions.add(Direction.WEST);
+        directions.add(Direction.SOUTH);
+        directions.add(Direction.EAST);
+
+        Random random = new Random();
+        // random steps of 1 to 5
+		int steps = random.nextInt(5) + 1;
+
         game.start();
         game.freeze();
         Square currentSquare = player.getSquare();
-        move(game, Direction.EAST, 3);
         Square afterSquare = player.getSquare();
+
+        while (currentSquare.equals(afterSquare)){
+            Direction direction = directions.get(random.nextInt(directions.size()));
+            directions.remove(direction);
+            move(game, direction, steps);
+            afterSquare = player.getSquare();
+        }
         assertThat(currentSquare.equals(afterSquare)).isFalse();
     }
 
@@ -220,7 +237,6 @@ public class FreezeTest {
                 }
             }
         }
-
         return ghostList;
     }
 }
