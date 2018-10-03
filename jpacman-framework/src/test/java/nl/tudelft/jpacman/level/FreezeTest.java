@@ -156,6 +156,22 @@ public class FreezeTest {
     }
 
     /**
+     * Validates the state of the game can still win if the player collects all the pellets.
+     */
+    @Test
+    void gameWin() {
+        game.start();
+        assertThat(game.isInProgress()).isTrue();
+        game.freeze();
+        assertThat(game.isInProgress()).isTrue();
+        // simulate a winning scenario where all the pellets are taken
+        removePellets();
+        // move once to trigger win detection
+        move(game, Direction.EAST, 1); 
+        assertThat(game.isInProgress()).isFalse();
+    }
+
+    /**
      * Validates the state of the game is unfrozen (npc can move) after a freeze -> start sequence.
      */
     @Test
@@ -204,19 +220,6 @@ public class FreezeTest {
         game.stop();
         assertThat(game.isInProgress()).isFalse();
         game.freeze();
-        assertThat(game.isInProgress()).isFalse();
-    }
-
-    @Test
-    void testWin() {
-        game.start();
-        assertThat(game.isInProgress()).isTrue();
-        game.freeze();
-        assertThat(game.isInProgress()).isTrue();
-        // simulate a winning scenario where all the pellets are taken
-        removePellets();
-        // move once to trigger win detection
-        move(game, Direction.EAST, 1); 
         assertThat(game.isInProgress()).isFalse();
     }
 
