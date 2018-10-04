@@ -350,6 +350,13 @@ public class Level {
     }
 
     /**
+     * Public method to call UpdateObservers to determine if the game has ended or not.
+     */
+    public void notfiyToUpdateObservers() {
+        updateObservers();
+    }
+
+    /**
      * A task that moves an NPC and reschedules itself after it finished.
      *
      * @author Jeroen Roosen

@@ -140,7 +140,7 @@ public class FreezeTest {
      * Validates the state of the game can still end if the player and ghost collides.
      */
     @Test
-    void gameEnd() {
+    void gameLost() {
         game.start();
         game.freeze();
         List<Ghost> ghostList = findGhostsInBoard(game.getLevel().getBoard());

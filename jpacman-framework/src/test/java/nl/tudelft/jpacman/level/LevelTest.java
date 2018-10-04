@@ -11,9 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import nl.tudelft.jpacman.Launcher;
 import nl.tudelft.jpacman.board.Board;
+import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.game.Game;
+import nl.tudelft.jpacman.level.Level.LevelObserver;
 import nl.tudelft.jpacman.npc.Ghost;
 import nl.tudelft.jpacman.npc.ghost.Blinky;
 import nl.tudelft.jpacman.npc.ghost.GhostFactory;
@@ -66,6 +70,14 @@ class LevelTest {
      * The default player interaction map.
      */
     private final DefaultPlayerInteractionMap defaultPlayerInteractions = new DefaultPlayerInteractionMap();
+
+    private final Launcher launcher = new Launcher();
+
+    private Game game;
+
+    private final PacManSprites spriteStore = new PacManSprites();
+    private final GhostFactory ghostFactory = new GhostFactory(spriteStore);
+    private final LevelFactory levelFactory = new LevelFactory(spriteStore, ghostFactory);
 
 
     /**
@@ -176,13 +188,19 @@ class LevelTest {
      */
     @Test
     void testCollision() {
-        PacManSprites spriteStore = new PacManSprites();
-        Player player = new PlayerFactory(spriteStore).createPacMan();
-        level.registerPlayer(player);
-        GhostFactory ghostFactory = new GhostFactory(spriteStore);
-        LevelFactory levelFactory = new LevelFactory(spriteStore, ghostFactory);
+        launcher.launch();
+        game = launcher.getGame();
+        Player player = game.getPlayers().get(0);
+        game.start();
+        game.getLevel().addObserver(game);
+        
         Ghost ghost = levelFactory.createGhost();
         Pellet pellet = levelFactory.createPellet();
+        List<Direction> directions = new ArrayList<Direction>();
+        directions.add(Direction.NORTH);
+        directions.add(Direction.WEST);
+        directions.add(Direction.SOUTH);
+        directions.add(Direction.EAST);
 
         List<Unit> unitList = new ArrayList<Unit>();
         unitList.add(player);
@@ -198,10 +216,19 @@ class LevelTest {
         defaultPlayerInteractions.collide(colider, colidee);
         if ((colider.getClass().equals(Player.class) && colidee.getClass().equals(Blinky.class)) || 
             (colider.getClass().equals(Blinky.class) && colidee.getClass().equals(Player.class))) {
-            assertThat(level.isAnyPlayerAlive()).isFalse();
+            
+            // call the UpdateObservers() indirectly to check whether has ended or not
+            game.getLevel().notfiyToUpdateObservers();
+            assertThat(player.isAlive()).isFalse();
+            assertThat(game.getLevel().isAnyPlayerAlive()).isFalse();
+            assertThat(game.getLevel().isInProgress()).isFalse();
         }
         else {
-            assertThat(level.isAnyPlayerAlive()).isTrue();
+            assertThat(player.isAlive()).isTrue();
+            assertThat(game.getLevel().isAnyPlayerAlive()).isTrue();
+            assertThat(game.getLevel().isInProgress()).isTrue();
         }
+
+        launcher.dispose();
     }
 }
