@@ -147,8 +147,8 @@ public class FreezeTest {
         assert(ghostList.size() > 0);
         DefaultPlayerInteractionMap defaultPlayerInteractions = new DefaultPlayerInteractionMap();
         defaultPlayerInteractions.collide(ghostList.get(0), player);
-        // move pacman once to update observer
-        game.getLevel().move(player, Direction.EAST); 
+        // notify to update observer
+        game.getLevel().notfiyToUpdateObservers();
         // should have collided with ghost (Inky is at starting position)
         assertThat(player.isAlive()).isFalse();
         assertThat(game.getLevel().isAnyPlayerAlive()).isFalse();
@@ -166,8 +166,8 @@ public class FreezeTest {
         assertThat(game.isInProgress()).isTrue();
         // simulate a winning scenario where all the pellets are taken
         removePellets();
-        // move once to trigger win detection
-        move(game, Direction.EAST, 1); 
+        // notify to update observer
+        game.getLevel().notfiyToUpdateObservers();
         assertThat(game.isInProgress()).isFalse();
     }
 

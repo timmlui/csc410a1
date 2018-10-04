@@ -71,10 +71,14 @@ class LevelTest {
      */
     private final DefaultPlayerInteractionMap defaultPlayerInteractions = new DefaultPlayerInteractionMap();
 
+    /**
+     * The launcher for test collision
+     */
     private final Launcher launcher = new Launcher();
 
-    private Game game;
-
+    /**
+     * The sprite and factories for the units.
+     */
     private final PacManSprites spriteStore = new PacManSprites();
     private final GhostFactory ghostFactory = new GhostFactory(spriteStore);
     private final LevelFactory levelFactory = new LevelFactory(spriteStore, ghostFactory);
@@ -189,7 +193,7 @@ class LevelTest {
     @Test
     void testCollision() {
         launcher.launch();
-        game = launcher.getGame();
+        Game game = launcher.getGame();
         Player player = game.getPlayers().get(0);
         game.start();
         game.getLevel().addObserver(game);
