@@ -196,7 +196,6 @@ class LevelTest {
         Game game = launcher.getGame();
         Player player = game.getPlayers().get(0);
         game.start();
-        game.getLevel().addObserver(game);
         
         Ghost ghost = levelFactory.createGhost();
         Pellet pellet = levelFactory.createPellet();
